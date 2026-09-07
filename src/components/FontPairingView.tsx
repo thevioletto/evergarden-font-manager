@@ -1,9 +1,11 @@
 import { type CSSProperties, useDeferredValue, useMemo, useState } from "react";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { toFontUrl } from "@/lib/font-utils";
 import { ManagedIcon } from "@/components/ui/managed-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WindowControls } from "@/components/WindowControls";
 import {
   Combobox,
   ComboboxContent,
@@ -303,6 +305,8 @@ function FontPickerCombobox({
         value={selectedOption}
         onInputValueChange={setQuery}
         onValueChange={onValueChange}
+        itemToStringLabel={(item: any) => item?.label ?? ""}
+        isItemEqualToValue={(item: any, val: any) => item?.id === val?.id}
         filter={null}
         openOnInputClick
         virtualized
@@ -545,10 +549,25 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
         }
       `}</style>
 
-      <div className="flex flex-1 items-center justify-center overflow-y-auto p-6 md:p-10">
-        <div className="w-full max-w-5xl">
-          <div className="mx-auto flex max-w-2xl flex-col gap-5">
-            <div className="bg-card text-card-foreground border-border/60 rounded-[28px] border p-6 shadow-2xl">
+      {/* Top Drag Region & Window Controls */}
+      <div
+        className="draggable-region flex h-14 shrink-0 items-center justify-between bg-transparent px-6 select-none"
+        data-tauri-drag-region
+        onDoubleClick={(e) => {
+          if (e.target === e.currentTarget) {
+            getCurrentWindow().toggleMaximize().catch(console.error);
+          }
+        }}
+      >
+        <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground" style={{ WebkitAppRegion: "no-drag" } as any}>
+          <span>Font Pairing Studio</span>
+        </div>
+        <WindowControls />
+      </div>
+
+      <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-2 pb-10 md:px-10">
+        <div className="mx-auto my-auto flex w-full max-w-2xl flex-col gap-6 py-4">
+          <div className="bg-card text-card-foreground border-border/60 rounded-[28px] border p-6 shadow-2xl">
               <div className="flex min-h-[270px] flex-col justify-between gap-8">
                 <div className="space-y-2">
                   <Input
@@ -602,7 +621,6 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
             </div>
           </div>
         </div>
-      </div>
 
       <div className="border-border/60 bg-background/88 sticky bottom-0 z-10 border-t px-4 py-4 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-5xl items-end justify-center gap-3">
