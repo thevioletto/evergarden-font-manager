@@ -2,62 +2,79 @@ name: Release Windows
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Version check ────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check version bump
+        id: check_version
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $tag = "v$version"
+          Write-Host "Current package.json version: $version ($tag)"
+
+          $tagExists = git ls-remote --tags origin "refs/tags/$tag"
+          if ($tagExists) {
+            Write-Host "Tag $tag already exists on remote. Skipping release."
+            echo "should_release=false" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "Tag $tag does not exist. Version bump detected! Proceeding to build and release."
+            echo "should_release=true" >> $env:GITHUB_OUTPUT
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+            echo "tag=$tag" >> $env:GITHUB_OUTPUT
+          }
 
       # ── Node / pnpm ──────────────────────────────────────────────────────
       - name: Setup pnpm
+        if: steps.check_version.outputs.should_release == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 10
           run_install: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-
       - name: Install JS dependencies
+        if: steps.check_version.outputs.should_release == 'true'
         run: pnpm install --frozen-lockfile
 
       # ── Rust ─────────────────────────────────────────────────────────────
       - name: Install Rust stable
+        if: steps.check_version.outputs.should_release == 'true'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
+        if: steps.check_version.outputs.should_release == 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "src-tauri -> target"
 
-      # ── Version guard ────────────────────────────────────────────────────
-      - name: Verify tag matches package.json version
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          $version = node -p "require('./package.json').version"
-          if ($tag -ne "v$version") {
-            Write-Error "Tag $tag does not match package.json version v$version"
-            exit 1
-          }
-
       # ── Build ────────────────────────────────────────────────────────────
       - name: Build Tauri app (portable)
+        if: steps.check_version.outputs.should_release == 'true'
         run: pnpm build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Stage portable binary
+        if: steps.check_version.outputs.should_release == 'true'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path "release" -Force
@@ -65,11 +82,15 @@ jobs:
 
       # ── Release ──────────────────────────────────────────────────────────
       - name: Create GitHub Release
+        if: steps.check_version.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.check_version.outputs.tag }}
+          name: ${{ steps.check_version.outputs.tag }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(steps.check_version.outputs.tag, '-') }}
           generate_release_notes: true
+          target_commitish: ${{ github.sha }}
           files: |
             release/Evergarden.Font.Manager.exe
         env:

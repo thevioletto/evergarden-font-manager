@@ -2,7 +2,6 @@
   "name": "evergarden-font-manager",
   "private": true,
   "version": "0.1.1",
-  "main": "dist-electron/main.js",
   "license": "MIT",
   "scripts": {
     "prepare": "husky",
@@ -12,6 +11,8 @@
     "dev": "tauri dev",
     "dev:react": "vite",
     "build:react": "vite build",
+    "build:website": "pnpm --dir evergarden-website build",
+    "build:all": "pnpm build:react && pnpm build:website",
     "build": "tauri build --no-bundle",
     "tauri": "tauri",
     "lint": "eslint . --max-warnings=0",
@@ -67,52 +68,5 @@
   "author": {
     "name": "Manju Madhav V A",
     "email": "manjumadhav.va@gmail.com"
-  },
-  "build": {
-    "appId": "com.evergarden.fontmanager",
-    "productName": "Evergarden Font Manager",
-    "publish": null,
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "build/icons/icon.ico",
-        "to": "icon.ico"
-      }
-    ],
-    "asar": true,
-    "asarUnpack": [
-      "**/*.node",
-      "**/better-sqlite3/**"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "Evergarden Font Manager Setup.${ext}"
-    },
-    "portable": {
-      "artifactName": "Evergarden Font Manager.${ext}"
-    },
-    "mac": {
-      "target": "dmg",
-      "category": "public.app-category.typography",
-      "icon": "build/icon.icns"
-    },
-    "linux": {
-      "target": "AppImage",
-      "category": "Graphics",
-      "icon": "build/icon.png"
-    }
   }
 }
