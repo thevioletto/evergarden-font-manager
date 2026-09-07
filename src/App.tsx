@@ -5,52 +5,25 @@ import {
   useMemo,
   useDeferredValue,
   useRef,
+  lazy,
+  Suspense,
 } from "react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { FontGrid } from "./components/FontGrid";
-import { FontDetailView } from "./components/FontDetailView";
-import { FontPairingView } from "./components/FontPairingView";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
-declare global {
-  interface Window {
-    api: {
-      // Drop import callbacks — registered once on mount
-      onDropPaths: (cb: (paths: string[]) => void) => void;
-      onImportProgress: (cb: (processed: number) => void) => void;
-      onImportDone: (
-        cb: (
-          result: { imported: number; failed: number; errors: string[] },
-          fonts: any[]
-        ) => void
-      ) => void;
-      // IPC
-      scanFonts: () => Promise<any[]>;
-      getFonts: () => Promise<any[]>;
-      toggleFavorite: (family: string, isFavorite: boolean) => Promise<void>;
-      getFontVariants: (family: string) => Promise<any[]>;
-      revealInFolder: (filePath: string) => Promise<void>;
-      getRecentFonts: () => Promise<any[]>;
-      getAppVersion: () => Promise<string>;
-      importDroppedFonts: (paths: string[]) => Promise<{
-        imported: number;
-        failed: number;
-        errors: string[];
-      }>;
-      onScanProgress: (callback: (count: number) => void) => void;
-      removeScanProgressListener: () => void;
-      removeImportProgressListener: () => void;
-      uninstallFont: (
-        family: string
-      ) => Promise<{ success: boolean; error?: string }>;
-      versions: {
-        electron: string;
-        chrome: string;
-        node: string;
-      };
-    };
-  }
-}
+const FontDetailView = lazy(() =>
+  import("./components/FontDetailView").then((module) => ({
+    default: module.FontDetailView,
+  }))
+);
+const FontPairingView = lazy(() =>
+  import("./components/FontPairingView").then((module) => ({
+    default: module.FontPairingView,
+  }))
+);
 
 function App() {
   const [fonts, setFonts] = useState<any[]>([]);
@@ -96,35 +69,97 @@ function App() {
   };
 
   const loadFonts = useCallback(async () => {
-    if (window.api) {
-      const loaded = await window.api.getFonts();
-      setFonts(loaded);
-    }
+    const loaded = await invoke<any[]>("get_fonts_cmd");
+    setFonts(loaded);
   }, []);
 
   useEffect(() => {
-    const init = async () => {
-      await loadFonts();
-    };
-    init();
+    loadFonts();
   }, [loadFonts]);
 
+  // Scan progress listener
   useEffect(() => {
-    // Set up scan progress listener
-    if (window.api) {
-      window.api.onScanProgress((count) => {
-        setScanningCount(count);
-      });
-    }
-
-    // Cleanup
+    const unlisten = listen<number>("scan-progress", (event) => {
+      setScanningCount(event.payload);
+    });
     return () => {
-      if (window.api) {
-        window.api.removeScanProgressListener();
-      }
+      unlisten.then((f) => f());
     };
   }, []);
 
+  // Import progress listener
+  useEffect(() => {
+    const unlisten = listen<number>("import-progress", (event) => {
+      setImportProgress(event.payload);
+    });
+    return () => {
+      unlisten.then((f) => f());
+    };
+  }, []);
+
+  // Drag-drop via Tauri built-in window drag-drop events
+  useEffect(() => {
+    const unlistenOver = listen("tauri://drag-enter", () => {
+      setIsDragOver(true);
+    });
+    const unlistenLeave = listen("tauri://drag-leave", () => {
+      setIsDragOver(false);
+      dragCounterRef.current = 0;
+    });
+    const unlistenDrop = listen<{ paths: string[] }>(
+      "tauri://drag-drop",
+      async (event) => {
+        const paths = event.payload.paths;
+        setIsDragOver(false);
+        dragCounterRef.current = 0;
+        if (!paths || paths.length === 0) return;
+
+        setIsImporting(true);
+        setImportProgress(0);
+        setImportMessage(null);
+
+        try {
+          const result = await invoke<{
+            imported: number;
+            failed: number;
+            errors: string[];
+          }>("import_dropped_fonts_cmd", { paths });
+
+          const updatedFonts = await invoke<any[]>("get_fonts_cmd");
+          if (updatedFonts.length > 0) setFonts(updatedFonts);
+
+          if (result.imported > 0) {
+            setImportMessage(
+              result.failed > 0
+                ? `Imported ${result.imported} font(s); ${result.failed} failed.`
+                : `Imported ${result.imported} font(s).`
+            );
+          } else if (result.failed > 0 && result.errors.length > 0) {
+            setImportMessage(result.errors[0] || "Import failed.");
+          } else {
+            setImportMessage(
+              "No font files recognised. Use .ttf, .otf, .woff, or .woff2."
+            );
+          }
+        } catch (e: any) {
+          setImportMessage(`Import error: ${e?.message || String(e)}`);
+        } finally {
+          setIsImporting(false);
+          setImportProgress(0);
+          setTimeout(() => setImportMessage(null), 4000);
+        }
+      }
+    );
+
+    return () => {
+      unlistenOver.then((f) => f());
+      unlistenLeave.then((f) => f());
+      unlistenDrop.then((f) => f());
+    };
+  }, []);
+
+  // React drag events only manage visual drag-over state
+  // Actual import is handled by the Tauri drag-drop event above
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -149,68 +184,20 @@ function App() {
     }
   }, []);
 
-  // Register drop callbacks on the preload bridge once on mount.
-  // The preload's window listener reads File.path (available there despite
-  // contextIsolation) and calls these callbacks directly.
-  useEffect(() => {
-    if (!window.api?.onDropPaths) return;
-    window.api.onDropPaths((paths) => {
-      console.log("[app] onDropPaths:", paths);
-      setIsDragOver(false);
-      dragCounterRef.current = 0;
-      setIsImporting(true);
-      setImportProgress(0);
-      setImportMessage(null);
-    });
-    window.api.onImportProgress((processed) => {
-      setImportProgress(processed);
-    });
-    window.api.onImportDone((result, fonts) => {
-      console.log("[app] onImportDone:", result, "fonts:", fonts?.length);
-      if (fonts.length > 0) setFonts(fonts);
-      setIsImporting(false);
-      setIsDragOver(false);
-      dragCounterRef.current = 0;
-      setImportProgress(0);
-      if (result.imported > 0) {
-        setImportMessage(
-          result.failed > 0
-            ? `Imported ${result.imported} font(s); ${result.failed} failed.`
-            : `Imported ${result.imported} font(s).`
-        );
-      } else if (result.failed > 0 && result.errors.length > 0) {
-        setImportMessage(result.errors[0] || "Import failed.");
-      } else {
-        setImportMessage(
-          "No font files recognised. Use .ttf, .otf, .woff, or .woff2."
-        );
-      }
-      setTimeout(() => setImportMessage(null), 4000);
-    });
-  }, []);
-
-  // Drop handler: only manages drag counter + isDragOver visual state.
-  // Actual import is handled by the preload capture listener above.
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dragCounterRef.current = 0;
     setIsDragOver(false);
-    console.log(
-      "[app:handleDrop] fired, files:",
-      e.dataTransfer?.files?.length ?? 0
-    );
   }, []);
 
   const [rebuildDoneAt, setRebuildDoneAt] = useState<number | null>(null);
 
   useEffect(() => {
     if (rebuildDoneAt == null) return;
-
     const timeoutId = window.setTimeout(() => {
       setRebuildDoneAt(null);
     }, 2500);
-
     return () => window.clearTimeout(timeoutId);
   }, [rebuildDoneAt]);
 
@@ -222,7 +209,6 @@ function App() {
     const intervalId = window.setInterval(() => {
       setNowSeconds(Math.floor(Date.now() / 1000));
     }, 60_000);
-
     return () => window.clearInterval(intervalId);
   }, []);
 
@@ -231,15 +217,12 @@ function App() {
   const handleScan = async () => {
     setLoading(true);
     setScanningCount(0);
-    if (window.api) {
-      await window.api.scanFonts();
-      loadFonts();
-      setRebuildDoneAt(Date.now());
-    }
+    await invoke("scan_fonts_cmd");
+    await loadFonts();
+    setRebuildDoneAt(Date.now());
     setLoading(false);
   };
 
-  // Filter fonts based on search and category (normalize null/empty, case-insensitive)
   const filteredFonts = useMemo(
     () =>
       fonts.filter((font) => {
@@ -275,13 +258,13 @@ function App() {
     ]
   );
 
-  // Category counts for sidebar (Google Fonts style), based on current view
   const fontsInView =
     selectedView === "favorites"
       ? fonts.filter((f) => f.is_favorite === 1)
       : selectedView === "recently-added"
         ? fonts.filter((f) => f.last_seen >= recentCutoff)
         : fonts;
+
   const categoryCounts = fontsInView.reduce<Record<string, number>>(
     (acc, font) => {
       const c = (font.category ?? "").trim() || "Basic";
@@ -308,7 +291,6 @@ function App() {
     []
   );
 
-  // Find selected font data
   const selectedFontData =
     selectedFont !== null ? fonts.find((f) => f.id === selectedFont) : null;
 
@@ -324,7 +306,7 @@ function App() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Full-window drag/import overlay — covers sidebar + main, blocks all clicks */}
+      {/* Full-window drag/import overlay */}
       {(isDragOver || isImporting) && (
         <div className="border-primary/60 bg-primary/5 fixed inset-0 z-100 flex items-center justify-center border-2 border-dashed backdrop-blur-sm">
           <div className="bg-background/90 flex flex-col items-center gap-3 rounded-xl px-8 py-6 shadow-lg">
@@ -351,23 +333,33 @@ function App() {
       />
 
       <div className="bg-secondary/30 dark:bg-background relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <Header
-          onScan={handleScan}
-          isScanning={loading}
-          rebuildDoneAt={rebuildDoneAt}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          previewText={previewText}
-          setPreviewText={setPreviewText}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-        />
+        {!selectedFontData && selectedView !== "pairing" && (
+          <Header
+            onScan={handleScan}
+            isScanning={loading}
+            rebuildDoneAt={rebuildDoneAt}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            previewText={previewText}
+            setPreviewText={setPreviewText}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
+        )}
 
         <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {selectedView === "pairing" ? (
-            <FontPairingView fonts={fonts} />
+            <Suspense
+              fallback={
+                <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                  Loading pairing view...
+                </div>
+              }
+            >
+              <FontPairingView fonts={fonts} />
+            </Suspense>
           ) : (
             <FontGrid
               key={`cat-${selectedCategory ?? "all"}-sub-${selectedSubcategory ?? "all"}`}
@@ -397,39 +389,52 @@ function App() {
           )}
         </main>
 
-        {selectedFontData && (
-          <div className="bg-background fixed inset-0 z-40 flex flex-col">
-            <FontDetailView
-              font={selectedFontData}
-              onBack={() => setSelectedFont(null)}
-              onUninstall={async (family: string) => {
-                if (!window.api?.uninstallFont) return;
-                await window.api.uninstallFont(family);
-                setSelectedFont(null);
-                await loadFonts();
-              }}
-            />
+        {/* Floating Status Pill (always on top, hidden in font detail and pairing views) */}
+        {!selectedFontData && selectedView !== "pairing" && (
+          <div className="border-border/60 bg-background/90 text-muted-foreground pointer-events-none fixed right-5 bottom-4 z-60 flex select-none items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium shadow-xl backdrop-blur-md transition-all">
+            {loading ? (
+              <>
+                <span className="bg-primary h-2 w-2 animate-pulse rounded-full" />
+                <span>
+                  {scanningCount > 0
+                    ? `Scanning (${scanningCount} files)…`
+                    : "Scanning fonts…"}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span>
+                  {filteredFonts.length !== fonts.length
+                    ? `${filteredFonts.length} of ${fonts.length} families`
+                    : `${fonts.length} families`}
+                </span>
+              </>
+            )}
           </div>
         )}
 
-        <footer className="bg-background text-muted-foreground flex h-10 items-center justify-between border-t px-6 text-[10px] font-medium tracking-widest uppercase">
-          <div className="flex gap-6">
-            <span>
-              {loading
-                ? `${scanningCount} files processed`
-                : filteredFonts.length !== fonts.length
-                  ? `${filteredFonts.length} / ${fonts.length} Font Families`
-                  : `${fonts.length} Font Families`}
-            </span>
+        {selectedFontData && (
+          <div className="bg-background fixed inset-0 z-40 flex flex-col">
+            <Suspense
+              fallback={
+                <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                  Loading font details...
+                </div>
+              }
+            >
+              <FontDetailView
+                font={selectedFontData}
+                onBack={() => setSelectedFont(null)}
+                onUninstall={async (family: string) => {
+                  await invoke("uninstall_font_cmd", { family });
+                  setSelectedFont(null);
+                  await loadFonts();
+                }}
+              />
+            </Suspense>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-              <span>System Connected</span>
-            </div>
-            <span>v0.1.0</span>
-          </div>
-        </footer>
+        )}
       </div>
     </div>
   );

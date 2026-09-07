@@ -34,16 +34,16 @@ export function Sidebar({
   return (
     <aside className="bg-background hidden h-full w-64 flex-col border-r md:flex">
       <div className="flex min-h-0 flex-1 flex-col p-6">
-        <div className="mb-6 flex shrink-0 items-center">
+        <div className="draggable-region mb-6 flex shrink-0 items-center select-none" data-tauri-drag-region>
           <img
             src={logo}
             alt="Evergarden"
-            className="h-12 w-auto dark:hidden"
+            className="h-12 w-auto dark:hidden pointer-events-none"
           />
           <img
             src={logoDark}
             alt="Evergarden"
-            className="hidden h-12 w-auto dark:block"
+            className="hidden h-12 w-auto dark:block pointer-events-none"
           />
         </div>
 
