@@ -549,9 +549,9 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
         }
       `}</style>
 
-      {/* Top Drag Region & Window Controls */}
+      {/* Top Drag Region */}
       <div
-        className="draggable-region flex h-14 shrink-0 items-center justify-between bg-transparent px-6 select-none"
+        className="draggable-region pointer-events-none absolute top-0 right-0 left-0 z-20 h-12 select-none"
         data-tauri-drag-region
         onDoubleClick={(e) => {
           if (e.target === e.currentTarget) {
@@ -559,20 +559,20 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
           }
         }}
       >
+        {/* Floating Pill Window Controls */}
         <div
-          className="text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wide"
+          className="bg-background/80 border-border/50 pointer-events-auto absolute top-2 right-3 flex items-center rounded-full border p-0.5 shadow-xs backdrop-blur-md transition-colors"
           style={{ WebkitAppRegion: "no-drag" } as any}
         >
-          <span>Font Pairing Studio</span>
+          <WindowControls />
         </div>
-        <WindowControls />
       </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-2 pb-10 md:px-10">
-        <div className="mx-auto my-auto flex w-full max-w-2xl flex-col gap-6 py-4">
-          <div className="bg-card text-card-foreground border-border/60 rounded-[28px] border p-6 shadow-2xl">
-            <div className="flex min-h-[270px] flex-col justify-between gap-8">
-              <div className="space-y-2">
+      <div className="flex flex-1 flex-col overflow-y-auto px-3.5 pt-3 pb-3 sm:px-6 md:px-8">
+        <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-1 flex-col justify-stretch gap-4 py-1 sm:gap-5">
+          <div className="bg-card text-card-foreground border-border/60 flex min-h-[220px] flex-1 flex-col justify-between rounded-[24px] border p-5 shadow-xl sm:p-6">
+            <div className="flex flex-1 flex-col justify-between gap-6">
+              <div className="space-y-1.5">
                 <Input
                   value={personName}
                   onChange={(event) => setPersonName(event.target.value)}
@@ -588,7 +588,7 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
               </div>
 
               <div
-                className="text-muted-foreground space-y-1 text-lg"
+                className="text-muted-foreground space-y-1 text-base sm:text-lg"
                 style={bodyStyle}
               >
                 {personContact.map((line, index) => (
@@ -598,7 +598,7 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
                     onChange={(event) =>
                       updateContactLine(index, event.target.value)
                     }
-                    className="h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                    className="h-auto w-full border-0 bg-transparent px-0 py-0.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
                     style={personContactStyle}
                   />
                 ))}
@@ -606,8 +606,8 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
             </div>
           </div>
 
-          <div className="bg-primary text-primary-foreground rounded-[28px] p-6 shadow-2xl">
-            <div className="flex min-h-[270px] flex-col items-center justify-center gap-4 text-center">
+          <div className="bg-primary text-primary-foreground flex min-h-[180px] flex-1 flex-col items-center justify-center rounded-[24px] p-5 shadow-xl sm:p-6">
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
               <Input
                 value={brandName}
                 onChange={(event) => setBrandName(event.target.value)}
