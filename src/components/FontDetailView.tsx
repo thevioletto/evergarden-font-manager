@@ -6,8 +6,11 @@ import {
   useDeferredValue,
   useTransition,
 } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Button } from "@/components/ui/button";
 import { ManagedIcon } from "@/components/ui/managed-icon";
+import { WindowControls } from "@/components/WindowControls";
 import { cn } from "@/lib/utils";
 import logo from "../../assets/logo.svg";
 import logoDark from "../../assets/logo-dark.svg";
@@ -19,7 +22,11 @@ import { OpenTypeTab } from "./font-detail/OpenTypeTab";
 import { WaterfallTab } from "./font-detail/WaterfallTab";
 import { InfoTab } from "./font-detail/InfoTab";
 import { FontDetailSidebar } from "./font-detail/FontDetailSidebar";
-import { OPENTYPE_FEATURES, toFontUrl } from "@/lib/font-utils";
+import {
+  FEATURE_CATEGORY_ORDER,
+  getFeatureInfo,
+  toFontUrl,
+} from "@/lib/font-utils";
 
 interface FontDetailViewProps {
   font: any;
@@ -55,40 +62,38 @@ export function FontDetailView({
   useEffect(() => {
     let cancelled = false;
     const loadVariants = async () => {
-      if (window.api && window.api.getFontVariants) {
-        const allVariants = await window.api.getFontVariants(font.family);
-        if (cancelled) return;
+      const allVariants = await invoke<any[]>("get_font_variants_cmd", { family: font.family });
+      if (cancelled) return;
 
-        if (allVariants.length > 0) {
-          const sub = (v: any) => (v.subfamily ?? "").trim().toLowerCase();
-          const isItalic = (v: any) =>
-            v.italic === 1 ||
-            sub(v).includes("italic") ||
-            sub(v).includes("oblique");
+      if (allVariants.length > 0) {
+        const sub = (v: any) => (v.subfamily ?? "").trim().toLowerCase();
+        const isItalic = (v: any) =>
+          v.italic === 1 ||
+          sub(v).includes("italic") ||
+          sub(v).includes("oblique");
 
-          const exactRegular = allVariants.find(
-            (v: any) => sub(v) === "regular"
-          );
-          const neutralNames = ["normal", "book", "roman"];
-          const exactNeutral = allVariants.find((v: any) =>
-            neutralNames.includes(sub(v))
-          );
-          const nonItalics = allVariants.filter((v: any) => !isItalic(v));
-          const byProximity = [...nonItalics].sort(
-            (a: any, b: any) =>
-              Math.abs((a.weight || 400) - 400) -
-              Math.abs((b.weight || 400) - 400)
-          );
-          const weightNearest = byProximity[0] ?? null;
+        const exactRegular = allVariants.find(
+          (v: any) => sub(v) === "regular"
+        );
+        const neutralNames = ["normal", "book", "roman"];
+        const exactNeutral = allVariants.find((v: any) =>
+          neutralNames.includes(sub(v))
+        );
+        const nonItalics = allVariants.filter((v: any) => !isItalic(v));
+        const byProximity = [...nonItalics].sort(
+          (a: any, b: any) =>
+            Math.abs((a.weight || 400) - 400) -
+            Math.abs((b.weight || 400) - 400)
+        );
+        const weightNearest = byProximity[0] ?? null;
 
-          const best =
-            exactRegular ?? exactNeutral ?? weightNearest ?? allVariants[0];
+        const best =
+          exactRegular ?? exactNeutral ?? weightNearest ?? allVariants[0];
 
-          startTabTransition(() => {
-            setVariants(allVariants);
-            setSelectedVariant(best);
-          });
-        }
+        startTabTransition(() => {
+          setVariants(allVariants);
+          setSelectedVariant(best);
+        });
       } else {
         startTabTransition(() => {
           setVariants([font]);
@@ -96,7 +101,14 @@ export function FontDetailView({
         });
       }
     };
-    loadVariants();
+    loadVariants().catch(() => {
+      if (!cancelled) {
+        startTabTransition(() => {
+          setVariants([font]);
+          setSelectedVariant(font);
+        });
+      }
+    });
     return () => {
       cancelled = true;
     };
@@ -203,21 +215,56 @@ export function FontDetailView({
   );
 
   const featuresByCategory = useMemo(() => {
-    const grouped: Record<string, typeof OPENTYPE_FEATURES> = {};
-    OPENTYPE_FEATURES.forEach((feature) => {
-      if (!grouped[feature.category]) {
-        grouped[feature.category] = [];
+    const grouped: Record<
+      string,
+      { tag: string; label: string; category: string }[]
+    > = {};
+
+    const sortedTags = Array.from(supportedFeatures).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+    );
+
+    sortedTags.forEach((tag) => {
+      const info = getFeatureInfo(tag);
+      if (!grouped[info.category]) {
+        grouped[info.category] = [];
       }
-      grouped[feature.category].push(feature);
+      grouped[info.category].push(info);
     });
-    return grouped;
-  }, []);
+
+    const orderedGrouped: Record<
+      string,
+      { tag: string; label: string; category: string }[]
+    > = {};
+
+    FEATURE_CATEGORY_ORDER.forEach((cat) => {
+      if (grouped[cat] && grouped[cat].length > 0) {
+        orderedGrouped[cat] = grouped[cat];
+      }
+    });
+
+    Object.keys(grouped).forEach((cat) => {
+      if (!orderedGrouped[cat]) {
+        orderedGrouped[cat] = grouped[cat];
+      }
+    });
+
+    return orderedGrouped;
+  }, [supportedFeatures]);
 
   return (
     <div className="bg-background flex h-screen flex-col overflow-hidden">
       <style>{fontFaceStyle}</style>
-      <header className="bg-background flex h-14 shrink-0 items-center justify-between border-b px-4">
-        <div className="flex items-center gap-6">
+      <header
+        className="bg-background draggable-region flex h-14 shrink-0 items-center justify-between border-b pr-4 pl-4 select-none"
+        data-tauri-drag-region
+        onDoubleClick={(e) => {
+          if (e.target === e.currentTarget) {
+            getCurrentWindow().toggleMaximize().catch(console.error);
+          }
+        }}
+      >
+        <div className="flex items-center gap-6" style={{ WebkitAppRegion: "no-drag" } as any}>
           <div className="flex items-center gap-2">
             <img
               src={logo}
@@ -270,6 +317,8 @@ export function FontDetailView({
             ))}
           </nav>
         </div>
+
+        <WindowControls />
       </header>
 
       <div className="flex flex-1 overflow-hidden">
