@@ -3,6 +3,7 @@ import { ManagedIcon } from "@/components/ui/managed-icon";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { invoke } from "@tauri-apps/api/core";
 import { getVariantDisplayLabel } from "@/lib/font-utils";
 import { MarqueeOnHover } from "./MarqueeOnHover";
 import { OPENTYPE_FEATURES } from "@/lib/font-utils";
@@ -264,9 +265,9 @@ export function FontDetailSidebar({
             variant="outline"
             className="w-full gap-2"
             onClick={() => {
-              if (window.api && window.api.revealInFolder) {
-                window.api.revealInFolder(currentFont.file_path);
-              }
+              invoke("reveal_in_folder_cmd", {
+                filePath: currentFont.file_path,
+              });
             }}
           >
             <ManagedIcon name="FolderOpen" className="h-4 w-4" />

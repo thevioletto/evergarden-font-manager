@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { FEATURE_SAMPLES, OPENTYPE_FEATURES } from "@/lib/font-utils";
+import { getFeatureInfo, getFeatureSample } from "@/lib/font-utils";
 
 interface OpenTypeTabProps {
   activeTab: string;
@@ -32,12 +32,8 @@ export function OpenTypeTab({
       {Array.from(supportedFeatures)
         .sort()
         .map((featureTag) => {
-          const sample =
-            FEATURE_SAMPLES[featureTag] ||
-            "The quick brown fox jumps over the lazy dog 0123456789";
-          const featureInfo = OPENTYPE_FEATURES.find(
-            (f) => f.tag === featureTag
-          );
+          const sample = getFeatureSample(featureTag);
+          const featureInfo = getFeatureInfo(featureTag);
 
           return (
             <div key={featureTag} className="space-y-4">
@@ -46,7 +42,7 @@ export function OpenTypeTab({
                   {featureTag}
                 </h3>
                 <span className="text-muted-foreground text-sm">
-                  {featureInfo?.label || "Unknown Feature"}
+                  {featureInfo.label}
                 </span>
               </div>
 

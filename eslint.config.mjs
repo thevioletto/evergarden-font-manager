@@ -8,11 +8,13 @@ export default tseslint.config(
   {
     ignores: [
       "build",
+      "deprecated",
       "dist",
       "dist-electron",
-      "evergarden-website/dist",
+      "evergarden-website",
       "node_modules",
       "release",
+      "src-tauri",
     ],
   },
   {

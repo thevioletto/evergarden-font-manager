@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+set -e
+
+before_diff="$(mktemp)"
+after_diff="$(mktemp)"
+before_untracked="$(mktemp)"
+after_untracked="$(mktemp)"
+
+cleanup() {
+  rm -f "$before_diff" "$after_diff" "$before_untracked" "$after_untracked"
+}
+
+trap cleanup EXIT
+
+git diff --binary --no-ext-diff > "$before_diff"
+git ls-files --others --exclude-standard | sort > "$before_untracked"
+
+pnpm format
+pnpm lint:fix
+
+git diff --binary --no-ext-diff > "$after_diff"
+git ls-files --others --exclude-standard | sort > "$after_untracked"
+
+if ! cmp -s "$before_diff" "$after_diff" || ! cmp -s "$before_untracked" "$after_untracked"; then
+  echo "pre-commit applied formatting or lint fixes."
+  echo "Review the updated files, stage them, and commit again."
+  git status --short
+  exit 1
+fi
+
+pnpm format:check
+pnpm lint
+pnpm build:react
+pnpm --dir evergarden-website build

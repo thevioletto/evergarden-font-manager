@@ -1,9 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-function toFontUrl(filePath: string): string {
-  const forward = filePath.replace(/\\/g, "/");
-  const encoded = forward.split("/").map(encodeURIComponent).join("/");
-  return `font://local/${encoded}`;
-}
+import { invoke } from "@tauri-apps/api/core";
+import { toFontUrl } from "@/lib/font-utils";
 
 interface FontPairingTabProps {
   currentFont: any;
@@ -25,13 +22,11 @@ export function FontPairingTab({ currentFont }: FontPairingTabProps) {
 
   useEffect(() => {
     async function fetchLocalFonts() {
-      if (window.api && window.api.getFonts) {
-        const fonts = await window.api.getFonts();
-        setLocalFonts(fonts);
-      }
+      const fonts = await invoke<any[]>("get_fonts_cmd");
+      setLocalFonts(fonts);
       setLoadingLocal(false);
     }
-    fetchLocalFonts();
+    fetchLocalFonts().catch(() => setLoadingLocal(false));
   }, []);
 
   useEffect(() => {

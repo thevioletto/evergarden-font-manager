@@ -1,6 +1,8 @@
 import { memo, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ManagedIcon } from "@/components/ui/managed-icon";
+import { invoke } from "@tauri-apps/api/core";
+import { toFontUrl } from "@/lib/font-utils";
 
 interface Font {
   id: number;
@@ -40,13 +42,7 @@ export const FontCard = memo(
 
     const previewPath = font.preview_file_path || font.file_path;
     const fontFaceStyle = useMemo(() => {
-      // Use font:// scheme so Electron serves with the correct Content-Type,
-      // avoiding Chromium OTS parse errors on legacy cmap subtables.
-      // "local" is a dummy host so Windows drive letters (C:) aren't eaten
-      // by URL parsing as the authority component.
-      const forward = previewPath.replace(/\\/g, "/");
-      const encoded = forward.split("/").map(encodeURIComponent).join("/");
-      const url = `font://local/${encoded}`;
+      const url = toFontUrl(previewPath);
       return (
         <style key={fontId}>
           {`
@@ -85,12 +81,12 @@ export const FontCard = memo(
                 e.stopPropagation();
                 const newState = !isFavorite;
                 setIsFavorite(newState);
-                if (window.api?.toggleFavorite) {
-                  await window.api.toggleFavorite(font.family, newState);
-                  // Refresh font list to update favorites view
-                  if (onFontsChange) {
-                    onFontsChange();
-                  }
+                await invoke("toggle_favorite_cmd", {
+                  family: font.family,
+                  isFavorite: newState,
+                });
+                if (onFontsChange) {
+                  onFontsChange();
                 }
               }}
               className="-m-1 p-1"

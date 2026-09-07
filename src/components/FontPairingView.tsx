@@ -1,9 +1,11 @@
 import { type CSSProperties, useDeferredValue, useMemo, useState } from "react";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { toFontUrl } from "@/lib/font-utils";
 import { ManagedIcon } from "@/components/ui/managed-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WindowControls } from "@/components/WindowControls";
 import {
   Combobox,
   ComboboxContent,
@@ -303,6 +305,8 @@ function FontPickerCombobox({
         value={selectedOption}
         onInputValueChange={setQuery}
         onValueChange={onValueChange}
+        itemToStringLabel={(item: any) => item?.label ?? ""}
+        isItemEqualToValue={(item: any, val: any) => item?.id === val?.id}
         filter={null}
         openOnInputClick
         virtualized
@@ -545,60 +549,77 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
         }
       `}</style>
 
-      <div className="flex flex-1 items-center justify-center overflow-y-auto p-6 md:p-10">
-        <div className="w-full max-w-5xl">
-          <div className="mx-auto flex max-w-2xl flex-col gap-5">
-            <div className="bg-card text-card-foreground border-border/60 rounded-[28px] border p-6 shadow-2xl">
-              <div className="flex min-h-[270px] flex-col justify-between gap-8">
-                <div className="space-y-2">
-                  <Input
-                    value={personName}
-                    onChange={(event) => setPersonName(event.target.value)}
-                    className="text-foreground h-auto w-full border-0 bg-transparent px-0 py-1 font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                    style={personNameStyle}
-                  />
-                  <Input
-                    value={personRole}
-                    onChange={(event) => setPersonRole(event.target.value)}
-                    className="text-muted-foreground h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                    style={personRoleStyle}
-                  />
-                </div>
+      {/* Top Drag Region */}
+      <div
+        className="draggable-region pointer-events-none absolute top-0 right-0 left-0 z-20 h-12 select-none"
+        data-tauri-drag-region
+        onDoubleClick={(e) => {
+          if (e.target === e.currentTarget) {
+            getCurrentWindow().toggleMaximize().catch(console.error);
+          }
+        }}
+      >
+        {/* Floating Pill Window Controls */}
+        <div
+          className="bg-background/80 border-border/50 pointer-events-auto absolute top-2 right-3 flex items-center rounded-full border p-0.5 shadow-xs backdrop-blur-md transition-colors"
+          style={{ WebkitAppRegion: "no-drag" } as any}
+        >
+          <WindowControls />
+        </div>
+      </div>
 
-                <div
-                  className="text-muted-foreground space-y-1 text-lg"
-                  style={bodyStyle}
-                >
-                  {personContact.map((line, index) => (
-                    <Input
-                      key={index}
-                      value={line}
-                      onChange={(event) =>
-                        updateContactLine(index, event.target.value)
-                      }
-                      className="h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                      style={personContactStyle}
-                    />
-                  ))}
-                </div>
+      <div className="flex flex-1 flex-col overflow-y-auto px-3.5 pt-3 pb-3 sm:px-6 md:px-8">
+        <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-1 flex-col justify-stretch gap-4 py-1 sm:gap-5">
+          <div className="bg-card text-card-foreground border-border/60 flex min-h-[220px] flex-1 flex-col justify-between rounded-[24px] border p-5 shadow-xl sm:p-6">
+            <div className="flex flex-1 flex-col justify-between gap-6">
+              <div className="space-y-1.5">
+                <Input
+                  value={personName}
+                  onChange={(event) => setPersonName(event.target.value)}
+                  className="text-foreground h-auto w-full border-0 bg-transparent px-0 py-1 font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                  style={personNameStyle}
+                />
+                <Input
+                  value={personRole}
+                  onChange={(event) => setPersonRole(event.target.value)}
+                  className="text-muted-foreground h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                  style={personRoleStyle}
+                />
+              </div>
+
+              <div
+                className="text-muted-foreground space-y-1 text-base sm:text-lg"
+                style={bodyStyle}
+              >
+                {personContact.map((line, index) => (
+                  <Input
+                    key={index}
+                    value={line}
+                    onChange={(event) =>
+                      updateContactLine(index, event.target.value)
+                    }
+                    className="h-auto w-full border-0 bg-transparent px-0 py-0.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                    style={personContactStyle}
+                  />
+                ))}
               </div>
             </div>
+          </div>
 
-            <div className="bg-primary text-primary-foreground rounded-[28px] p-6 shadow-2xl">
-              <div className="flex min-h-[270px] flex-col items-center justify-center gap-4 text-center">
-                <Input
-                  value={brandName}
-                  onChange={(event) => setBrandName(event.target.value)}
-                  className="h-auto w-full border-0 bg-transparent px-0 py-1 text-center font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                  style={brandNameStyle}
-                />
-                <Input
-                  value={brandTagline}
-                  onChange={(event) => setBrandTagline(event.target.value)}
-                  className="text-primary-foreground/90 h-auto w-full border-0 bg-transparent px-0 py-1 text-center shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                  style={brandTaglineStyle}
-                />
-              </div>
+          <div className="bg-primary text-primary-foreground flex min-h-[180px] flex-1 flex-col items-center justify-center rounded-[24px] p-5 shadow-xl sm:p-6">
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
+              <Input
+                value={brandName}
+                onChange={(event) => setBrandName(event.target.value)}
+                className="h-auto w-full border-0 bg-transparent px-0 py-1 text-center font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                style={brandNameStyle}
+              />
+              <Input
+                value={brandTagline}
+                onChange={(event) => setBrandTagline(event.target.value)}
+                className="text-primary-foreground/90 h-auto w-full border-0 bg-transparent px-0 py-1 text-center shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                style={brandTaglineStyle}
+              />
             </div>
           </div>
         </div>

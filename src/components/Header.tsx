@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ManagedIcon } from "@/components/ui/managed-icon";
@@ -12,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { WindowControls } from "@/components/WindowControls";
 
 interface HeaderProps {
   onScan: () => void;
@@ -47,7 +50,7 @@ export function Header({
 
     const loadAppVersion = async () => {
       try {
-        const version = await window.api?.getAppVersion?.();
+        const version = await invoke<string>("get_app_version_cmd");
         if (!cancelled && version) {
           setAppVersion(version);
         }
@@ -71,21 +74,30 @@ export function Header({
       : "idle";
 
   return (
-    <header className="bg-background draggable-region flex h-20 shrink-0 items-center justify-between gap-8 border-b pr-36 pl-8">
+    <header
+      className="bg-background draggable-region flex h-14 shrink-0 items-center justify-between gap-6 border-b pr-4 pl-6 select-none"
+      data-tauri-drag-region
+      onDoubleClick={(e) => {
+        if (e.target === e.currentTarget) {
+          getCurrentWindow().toggleMaximize().catch(console.error);
+        }
+      }}
+    >
       {/* Search */}
       <div
-        className="flex max-w-xs flex-1 items-center gap-4"
+        className="flex max-w-xs flex-1 items-center gap-3"
         style={{ WebkitAppRegion: "no-drag" } as any}
       >
         <ManagedIcon
           name="Search"
-          className="text-muted-foreground h-5 w-5 shrink-0"
+          className="text-muted-foreground h-4 w-4 shrink-0"
         />
         <Input
           type="text"
           placeholder="Search fonts..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          className="h-8 text-sm"
         />
         {searchQuery && (
           <button
@@ -94,34 +106,38 @@ export function Header({
             className="shrink-0 rounded-sm p-0.5 opacity-70 transition-opacity hover:opacity-100"
             title="Clear search"
           >
-            <ManagedIcon name="X" className="text-foreground h-4 w-4" />
+            <ManagedIcon name="X" className="text-foreground h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
-      <div className="bg-border mx-2 h-8 w-px" />
+      <div className="bg-border mx-1 h-5 w-px" />
 
       {/* Preview Text */}
       <div
-        className="flex flex-1 items-center gap-4"
+        className="flex flex-1 items-center gap-3"
         style={{ WebkitAppRegion: "no-drag" } as any}
       >
-        <ManagedIcon name="Type" className="text-muted-foreground h-4 w-4" />
+        <ManagedIcon
+          name="Type"
+          className="text-muted-foreground h-4 w-4 shrink-0"
+        />
         <Input
           type="text"
           placeholder="Type something to preview..."
           value={previewText}
           onChange={(e) => setPreviewText(e.target.value)}
+          className="h-8 text-sm"
         />
       </div>
 
       {/* Controls */}
       <div
-        className="flex items-center gap-6"
+        className="flex items-center gap-4"
         style={{ WebkitAppRegion: "no-drag" } as any}
       >
-        <div className="flex w-48 items-center gap-3">
-          <span className="text-muted-foreground w-8 text-right text-[10px] font-bold">
+        <div className="flex w-44 items-center gap-2.5">
+          <span className="text-muted-foreground w-7 text-right text-[10px] font-bold">
             {fontSize}px
           </span>
           <Slider
@@ -134,19 +150,25 @@ export function Header({
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setFontSize(72)}
             title="Reset View"
+            className="h-8 w-8 rounded-full"
           >
-            <ManagedIcon name="RefreshLine" className="h-5 w-5" />
+            <ManagedIcon name="RefreshLine" className="h-4 w-4" />
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" title="Settings">
-                <ManagedIcon name="Settings" className="h-5 w-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Settings"
+                className="h-8 w-8 rounded-full"
+              >
+                <ManagedIcon name="Settings" className="h-4 w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
@@ -250,10 +272,8 @@ export function Header({
                       <span className="font-mono">{appVersion}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Electron</span>
-                      <span className="font-mono">
-                        {window.api?.versions?.electron || "Unknown"}
-                      </span>
+                      <span>Runtime</span>
+                      <span className="font-mono">Tauri</span>
                     </div>
                     <div className="mt-2 flex flex-col items-center gap-1 border-t pt-2">
                       <span className="opacity-50">
@@ -262,7 +282,7 @@ export function Header({
                     </div>
                   </div>
                   <a
-                    href="https://github.com/violetto-rose/evergarden-font-manager"
+                    href="https://github.com/thevioletto/evergarden-font-manager"
                     target="_blank"
                     rel="noreferrer noopener"
                     className="text-muted-foreground hover:text-primary mt-1 block w-full text-center text-[10px] tracking-widest uppercase transition-colors"
@@ -273,6 +293,10 @@ export function Header({
               </div>
             </DialogContent>
           </Dialog>
+
+          <div className="bg-border mx-1 h-6 w-px" />
+
+          <WindowControls />
         </div>
       </div>
     </header>

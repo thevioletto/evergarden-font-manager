@@ -3,9 +3,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "forceConsistentCasingInFileNames": true,
     "strict": true,
