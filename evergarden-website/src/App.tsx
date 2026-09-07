@@ -174,7 +174,7 @@ function PairingPage() {
             Home
           </a>
           <a
-            href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.Setup.exe"
+            href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.exe"
             className="rounded-full bg-white px-5 py-2.5 font-mono text-xs font-semibold tracking-wider text-black uppercase transition-colors hover:bg-zinc-200"
           >
             Download
@@ -222,10 +222,10 @@ function Header() {
         </a>
       </nav>
       <a
-        href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.Setup.exe"
+        href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.exe"
         className="rounded-full bg-white px-5 py-2.5 font-mono text-xs font-semibold tracking-wider text-black uppercase transition-colors hover:bg-zinc-200"
       >
-        Download Now
+        Download
       </a>
     </header>
   )
@@ -245,7 +245,7 @@ function Hero() {
       >
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 font-mono text-xs font-semibold tracking-wider text-zinc-300 uppercase backdrop-blur-sm">
           <Sparkles className="size-4 text-purple-400" />
-          <span>The ultimate font manager for designers</span>
+          <span>Local-first desktop font manager</span>
         </div>
 
         <h1 className="mb-6 bg-linear-to-b from-white to-white/50 bg-clip-text p-2 text-5xl leading-[1.1] font-bold text-transparent md:text-7xl lg:text-8xl">
@@ -254,23 +254,23 @@ function Hero() {
         </h1>
 
         <p className="mx-auto mb-12 max-w-2xl text-xl leading-relaxed font-light tracking-wide text-zinc-400 md:text-2xl">
-          A lightning-fast, beautifully designed font manager that feels like magic. Preview,
-          organize, and discover typography like never before.
+          A high-performance typography studio for Windows powered by Tauri v2 and Rust. Offline
+          SQLite indexing, deep OpenType inspection, live specimens, and instant pairing.
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <a
-            href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.Setup.exe"
+            href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.exe"
             className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-white px-8 font-mono text-sm font-semibold tracking-widest text-black transition-all hover:bg-zinc-200 sm:w-auto"
           >
-            Download for Windows
+            Download for Windows (.exe)
             <ArrowRight className="size-5" />
           </a>
           <a
-            href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.exe"
+            href="https://github.com/thevioletto/evergarden-font-manager/releases/latest"
             className="flex h-14 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 font-mono text-sm font-semibold tracking-widest text-white transition-all hover:bg-white/10 sm:w-auto"
           >
-            Download Portable
+            All Releases
           </a>
         </div>
       </motion.div>
@@ -337,19 +337,27 @@ function Features() {
   const features = [
     {
       icon: <LayoutGrid className="size-6 text-indigo-400" />,
-      title: 'Beautiful Grid View',
-      description: 'Browse your typography collection in a stunning masonry layout.',
+      title: 'Virtualized Font Grid',
+      description:
+        'Lightning-fast virtualized masonry grid effortlessly rendering thousands of system fonts without frame drops.',
     },
     {
       icon: <Component className="size-6 text-purple-400" />,
-      title: 'In-Depth Previews',
+      title: 'Deep OpenType Inspection',
       description:
-        'Test run fonts, inspect glyphs, and check metrics without opening a design tool.',
+        'Inspect font metadata, explore glyph tables, and toggle Stylistic Sets and Character Variants in real-time.',
     },
     {
-      icon: <Box className="size-6 text-pink-400" />,
-      title: 'Local Database',
-      description: 'Powered by SQLite locally for blazing fast performance, fully offline capable.',
+      icon: <Sparkles className="size-6 text-pink-400" />,
+      title: 'Font Pairing Studio',
+      description:
+        'Explore typographic combinations and test heading and body pairings seamlessly across layout cards.',
+    },
+    {
+      icon: <Box className="size-6 text-emerald-400" />,
+      title: 'Tauri v2 & SQLite Core',
+      description:
+        'Built on Rust and local SQLite for near-zero idle RAM consumption, ~11.9MB binary footprint, and offline speed.',
     },
   ]
 
@@ -366,11 +374,11 @@ function Features() {
             <span className="tracking-tight text-zinc-400 italic">Nothing you don't.</span>
           </h2>
           <p className="mx-auto max-w-2xl font-mono text-sm tracking-widest text-zinc-500 uppercase">
-            Designed meticulously to provide a seamless experience.
+            Engineered meticulously for typography enthusiasts and designers.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, i) => (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -403,10 +411,10 @@ function CTA() {
           <span className="text-indigo-300 italic">transform your workflow?</span>
         </h2>
         <a
-          href="https://github.com/thevioletto/evergarden-font-manager/releases/latest"
+          href="https://github.com/thevioletto/evergarden-font-manager/releases/latest/download/Evergarden.Font.Manager.exe"
           className="inline-flex h-14 items-center justify-center rounded-full bg-white px-10 font-mono text-sm font-semibold tracking-widest text-black uppercase shadow-[0_0_40px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105 hover:bg-zinc-200"
         >
-          Get Started Free
+          Download for Windows (.exe)
         </a>
       </div>
     </section>
