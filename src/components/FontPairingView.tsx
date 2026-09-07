@@ -559,7 +559,10 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
           }
         }}
       >
-        <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground" style={{ WebkitAppRegion: "no-drag" } as any}>
+        <div
+          className="text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wide"
+          style={{ WebkitAppRegion: "no-drag" } as any}
+        >
           <span>Font Pairing Studio</span>
         </div>
         <WindowControls />
@@ -568,59 +571,59 @@ export function FontPairingView({ fonts }: FontPairingViewProps) {
       <div className="flex flex-1 flex-col overflow-y-auto px-6 pt-2 pb-10 md:px-10">
         <div className="mx-auto my-auto flex w-full max-w-2xl flex-col gap-6 py-4">
           <div className="bg-card text-card-foreground border-border/60 rounded-[28px] border p-6 shadow-2xl">
-              <div className="flex min-h-[270px] flex-col justify-between gap-8">
-                <div className="space-y-2">
-                  <Input
-                    value={personName}
-                    onChange={(event) => setPersonName(event.target.value)}
-                    className="text-foreground h-auto w-full border-0 bg-transparent px-0 py-1 font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                    style={personNameStyle}
-                  />
-                  <Input
-                    value={personRole}
-                    onChange={(event) => setPersonRole(event.target.value)}
-                    className="text-muted-foreground h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                    style={personRoleStyle}
-                  />
-                </div>
-
-                <div
-                  className="text-muted-foreground space-y-1 text-lg"
-                  style={bodyStyle}
-                >
-                  {personContact.map((line, index) => (
-                    <Input
-                      key={index}
-                      value={line}
-                      onChange={(event) =>
-                        updateContactLine(index, event.target.value)
-                      }
-                      className="h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                      style={personContactStyle}
-                    />
-                  ))}
-                </div>
+            <div className="flex min-h-[270px] flex-col justify-between gap-8">
+              <div className="space-y-2">
+                <Input
+                  value={personName}
+                  onChange={(event) => setPersonName(event.target.value)}
+                  className="text-foreground h-auto w-full border-0 bg-transparent px-0 py-1 font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                  style={personNameStyle}
+                />
+                <Input
+                  value={personRole}
+                  onChange={(event) => setPersonRole(event.target.value)}
+                  className="text-muted-foreground h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                  style={personRoleStyle}
+                />
               </div>
-            </div>
 
-            <div className="bg-primary text-primary-foreground rounded-[28px] p-6 shadow-2xl">
-              <div className="flex min-h-[270px] flex-col items-center justify-center gap-4 text-center">
-                <Input
-                  value={brandName}
-                  onChange={(event) => setBrandName(event.target.value)}
-                  className="h-auto w-full border-0 bg-transparent px-0 py-1 text-center font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                  style={brandNameStyle}
-                />
-                <Input
-                  value={brandTagline}
-                  onChange={(event) => setBrandTagline(event.target.value)}
-                  className="text-primary-foreground/90 h-auto w-full border-0 bg-transparent px-0 py-1 text-center shadow-none focus-visible:border-transparent focus-visible:ring-0"
-                  style={brandTaglineStyle}
-                />
+              <div
+                className="text-muted-foreground space-y-1 text-lg"
+                style={bodyStyle}
+              >
+                {personContact.map((line, index) => (
+                  <Input
+                    key={index}
+                    value={line}
+                    onChange={(event) =>
+                      updateContactLine(index, event.target.value)
+                    }
+                    className="h-auto w-full border-0 bg-transparent px-0 py-1 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                    style={personContactStyle}
+                  />
+                ))}
               </div>
             </div>
           </div>
+
+          <div className="bg-primary text-primary-foreground rounded-[28px] p-6 shadow-2xl">
+            <div className="flex min-h-[270px] flex-col items-center justify-center gap-4 text-center">
+              <Input
+                value={brandName}
+                onChange={(event) => setBrandName(event.target.value)}
+                className="h-auto w-full border-0 bg-transparent px-0 py-1 text-center font-semibold shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                style={brandNameStyle}
+              />
+              <Input
+                value={brandTagline}
+                onChange={(event) => setBrandTagline(event.target.value)}
+                className="text-primary-foreground/90 h-auto w-full border-0 bg-transparent px-0 py-1 text-center shadow-none focus-visible:border-transparent focus-visible:ring-0"
+                style={brandTaglineStyle}
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
       <div className="border-border/60 bg-background/88 sticky bottom-0 z-10 border-t px-4 py-4 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-5xl items-end justify-center gap-3">

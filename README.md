@@ -46,12 +46,14 @@ It uses a high-performance Rust backend powered by Tauri v2 to parse font binari
 ```
 
 ### Backend (Rust + Tauri v2)
+
 - **Binary Parsing (`ttf-parser`)**: Reads font files (`.ttf`, `.otf`, `.woff2`) to extract font family names, styles, weights, Unicode coverage, and OpenType lookup tables without relying on system font APIs.
 - **Local Indexing (`rusqlite`)**: Stores parsed font metadata in a local SQLite database. Searches, filtering, and tag lookups query this index directly, eliminating the need to re-read font files on every startup.
 - **Filesystem Watcher (`notify`)**: Monitors indexed font folders for file creation, modification, and deletion events, updating the database incrementally.
 - **Asset Streaming**: Local font files are streamed to the webview using Tauri v2's native asset protocol (`convertFileSrc`), ensuring correct MIME types and fast memory-mapped font rendering.
 
 ### Frontend (React 19 + TypeScript + Vite 7)
+
 - **Virtualized Rendering (`react-window`)**: Virtualizes the font grid so only visible font cards are rendered into the DOM, maintaining 60fps scrolling even with thousands of installed typefaces.
 - **Dynamic Font Loading**: Fonts are dynamically registered into document stylesheets via CSS `@font-face` rules on demand as they scroll into view.
 
@@ -95,6 +97,7 @@ pnpm build
 ```
 
 The output executable will be generated at:
+
 ```
 src-tauri/target/release/evergarden-font-manager.exe
 ```
@@ -103,15 +106,15 @@ src-tauri/target/release/evergarden-font-manager.exe
 
 ## Available Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Starts Tauri development mode with hot-reloading for frontend and backend |
-| `pnpm dev:react` | Runs Vite frontend server in browser |
-| `pnpm build` | Builds the optimized release portable `.exe` binary |
-| `pnpm build:react` | Compiles the production React frontend bundle |
-| `pnpm icons` | Generates application icons from `assets/icon-1024.png` into `src-tauri/icons` |
-| `pnpm lint` | Runs ESLint check across all TypeScript/React source files |
-| `pnpm format` | Formats all source files using Prettier |
+| Command            | Description                                                                    |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `pnpm dev`         | Starts Tauri development mode with hot-reloading for frontend and backend      |
+| `pnpm dev:react`   | Runs Vite frontend server in browser                                           |
+| `pnpm build`       | Builds the optimized release portable `.exe` binary                            |
+| `pnpm build:react` | Compiles the production React frontend bundle                                  |
+| `pnpm icons`       | Generates application icons from `assets/icon-1024.png` into `src-tauri/icons` |
+| `pnpm lint`        | Runs ESLint check across all TypeScript/React source files                     |
+| `pnpm format`      | Formats all source files using Prettier                                        |
 
 ---
 

@@ -31,7 +31,8 @@ export default defineConfig(async () => ({
   envPrefix: ["VITE_", "TAURI_"],
   build: {
     // Tauri on Windows uses MSVC which doesn't support ES2017
-    target: process.env.TAURI_ENV_PLATFORM == "windows" ? "chrome105" : "safari13",
+    target:
+      process.env.TAURI_ENV_PLATFORM == "windows" ? "chrome105" : "safari13",
     // Don't minify for debug builds
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
     // Produce sourcemaps for debug builds

@@ -58,9 +58,7 @@ export async function loadGoogleFontFamily(
     return
   }
 
-  const existingLink = document.querySelector<HTMLLinkElement>(
-    `link[data-eg-font-family="${key}"]`,
-  )
+  const existingLink = document.querySelector<HTMLLinkElement>(`link[data-eg-font-family="${key}"]`)
   if (existingLink) {
     loadedFamilies.add(key)
     return

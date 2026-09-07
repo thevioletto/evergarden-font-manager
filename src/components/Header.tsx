@@ -118,7 +118,10 @@ export function Header({
         className="flex flex-1 items-center gap-3"
         style={{ WebkitAppRegion: "no-drag" } as any}
       >
-        <ManagedIcon name="Type" className="text-muted-foreground h-4 w-4 shrink-0" />
+        <ManagedIcon
+          name="Type"
+          className="text-muted-foreground h-4 w-4 shrink-0"
+        />
         <Input
           type="text"
           placeholder="Type something to preview..."
@@ -270,9 +273,7 @@ export function Header({
                     </div>
                     <div className="flex justify-between">
                       <span>Runtime</span>
-                      <span className="font-mono">
-                        Tauri
-                      </span>
+                      <span className="font-mono">Tauri</span>
                     </div>
                     <div className="mt-2 flex flex-col items-center gap-1 border-t pt-2">
                       <span className="opacity-50">

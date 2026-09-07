@@ -13,7 +13,11 @@ export function toFontUrl(filePath: string): string {
   return convertFileSrc(filePath);
 }
 
-export const OPENTYPE_FEATURES: { tag: string; label: string; category: string }[] = [
+export const OPENTYPE_FEATURES: {
+  tag: string;
+  label: string;
+  category: string;
+}[] = [
   // Ligatures
   { tag: "liga", label: "Standard Ligatures", category: "Ligatures" },
   { tag: "dlig", label: "Discretionary Ligatures", category: "Ligatures" },
@@ -64,17 +68,61 @@ export const OPENTYPE_FEATURES: { tag: string; label: string; category: string }
   { tag: "cv07", label: "Character Variant 7", category: "Character Variants" },
   { tag: "cv08", label: "Character Variant 8", category: "Character Variants" },
   { tag: "cv09", label: "Character Variant 9", category: "Character Variants" },
-  { tag: "cv10", label: "Character Variant 10", category: "Character Variants" },
-  { tag: "cv11", label: "Character Variant 11", category: "Character Variants" },
-  { tag: "cv12", label: "Character Variant 12", category: "Character Variants" },
-  { tag: "cv13", label: "Character Variant 13", category: "Character Variants" },
-  { tag: "cv14", label: "Character Variant 14", category: "Character Variants" },
-  { tag: "cv15", label: "Character Variant 15", category: "Character Variants" },
-  { tag: "cv16", label: "Character Variant 16", category: "Character Variants" },
-  { tag: "cv17", label: "Character Variant 17", category: "Character Variants" },
-  { tag: "cv18", label: "Character Variant 18", category: "Character Variants" },
-  { tag: "cv19", label: "Character Variant 19", category: "Character Variants" },
-  { tag: "cv20", label: "Character Variant 20", category: "Character Variants" },
+  {
+    tag: "cv10",
+    label: "Character Variant 10",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv11",
+    label: "Character Variant 11",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv12",
+    label: "Character Variant 12",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv13",
+    label: "Character Variant 13",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv14",
+    label: "Character Variant 14",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv15",
+    label: "Character Variant 15",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv16",
+    label: "Character Variant 16",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv17",
+    label: "Character Variant 17",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv18",
+    label: "Character Variant 18",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv19",
+    label: "Character Variant 19",
+    category: "Character Variants",
+  },
+  {
+    tag: "cv20",
+    label: "Character Variant 20",
+    category: "Character Variants",
+  },
 
   // Numbers & Figures
   { tag: "lnum", label: "Lining Figures", category: "Numbers" },
@@ -121,7 +169,11 @@ export const FEATURE_CATEGORY_ORDER = [
   "Other",
 ];
 
-export function getFeatureInfo(tag: string): { tag: string; label: string; category: string } {
+export function getFeatureInfo(tag: string): {
+  tag: string;
+  label: string;
+  category: string;
+} {
   const found = OPENTYPE_FEATURES.find((f) => f.tag === tag);
   if (found) return found;
 

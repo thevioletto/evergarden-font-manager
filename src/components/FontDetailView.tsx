@@ -62,7 +62,9 @@ export function FontDetailView({
   useEffect(() => {
     let cancelled = false;
     const loadVariants = async () => {
-      const allVariants = await invoke<any[]>("get_font_variants_cmd", { family: font.family });
+      const allVariants = await invoke<any[]>("get_font_variants_cmd", {
+        family: font.family,
+      });
       if (cancelled) return;
 
       if (allVariants.length > 0) {
@@ -72,9 +74,7 @@ export function FontDetailView({
           sub(v).includes("italic") ||
           sub(v).includes("oblique");
 
-        const exactRegular = allVariants.find(
-          (v: any) => sub(v) === "regular"
-        );
+        const exactRegular = allVariants.find((v: any) => sub(v) === "regular");
         const neutralNames = ["normal", "book", "roman"];
         const exactNeutral = allVariants.find((v: any) =>
           neutralNames.includes(sub(v))
@@ -264,7 +264,10 @@ export function FontDetailView({
           }
         }}
       >
-        <div className="flex items-center gap-6" style={{ WebkitAppRegion: "no-drag" } as any}>
+        <div
+          className="flex items-center gap-6"
+          style={{ WebkitAppRegion: "no-drag" } as any}
+        >
           <div className="flex items-center gap-2">
             <img
               src={logo}

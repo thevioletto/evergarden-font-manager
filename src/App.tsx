@@ -391,7 +391,7 @@ function App() {
 
         {/* Floating Status Pill (always on top, hidden in font detail and pairing views) */}
         {!selectedFontData && selectedView !== "pairing" && (
-          <div className="border-border/60 bg-background/90 text-muted-foreground pointer-events-none fixed right-5 bottom-4 z-60 flex select-none items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium shadow-xl backdrop-blur-md transition-all">
+          <div className="border-border/60 bg-background/90 text-muted-foreground pointer-events-none fixed right-5 bottom-4 z-60 flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium shadow-xl backdrop-blur-md transition-all select-none">
             {loading ? (
               <>
                 <span className="bg-primary h-2 w-2 animate-pulse rounded-full" />

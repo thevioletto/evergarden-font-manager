@@ -265,7 +265,9 @@ export function FontDetailSidebar({
             variant="outline"
             className="w-full gap-2"
             onClick={() => {
-                invoke("reveal_in_folder_cmd", { filePath: currentFont.file_path });
+              invoke("reveal_in_folder_cmd", {
+                filePath: currentFont.file_path,
+              });
             }}
           >
             <ManagedIcon name="FolderOpen" className="h-4 w-4" />
