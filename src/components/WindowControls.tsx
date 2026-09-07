@@ -35,7 +35,7 @@ export function WindowControls() {
     return () => {
       if (unlisten) unlisten();
     };
-  }, []);
+  }, [appWindow]);
 
   const handleMinimize = () => {
     appWindow.minimize().catch(console.error);
@@ -59,7 +59,7 @@ export function WindowControls() {
         type="button"
         onClick={handleMinimize}
         title="Minimize"
-        className="text-muted-foreground hover:text-foreground hover:bg-muted/80 flex h-8 w-8 aspect-square items-center justify-center rounded-full transition-colors focus:outline-none"
+        className="text-muted-foreground hover:text-foreground hover:bg-muted/80 flex aspect-square h-8 w-8 items-center justify-center rounded-full transition-colors focus:outline-none"
       >
         <svg width="12" height="2" viewBox="0 0 12 2" className="fill-current">
           <rect width="12" height="2" rx="1" />
@@ -70,10 +70,15 @@ export function WindowControls() {
         type="button"
         onClick={handleToggleMaximize}
         title={isMaximized ? "Restore" : "Maximize"}
-        className="text-muted-foreground hover:text-foreground hover:bg-muted/80 flex h-8 w-8 aspect-square items-center justify-center rounded-full transition-colors focus:outline-none"
+        className="text-muted-foreground hover:text-foreground hover:bg-muted/80 flex aspect-square h-8 w-8 items-center justify-center rounded-full transition-colors focus:outline-none"
       >
         {isMaximized ? (
-          <svg width="12" height="12" viewBox="0 0 12 12" className="stroke-current">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            className="stroke-current"
+          >
             <path
               fill="none"
               strokeWidth="1.2"
@@ -81,7 +86,12 @@ export function WindowControls() {
             />
           </svg>
         ) : (
-          <svg width="12" height="12" viewBox="0 0 12 12" className="stroke-current">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            className="stroke-current"
+          >
             <path
               fill="none"
               strokeWidth="1.2"
@@ -95,9 +105,14 @@ export function WindowControls() {
         type="button"
         onClick={handleClose}
         title="Close"
-        className="text-muted-foreground hover:bg-destructive hover:text-destructive-foreground flex h-8 w-8 aspect-square items-center justify-center rounded-full transition-colors focus:outline-none"
+        className="text-muted-foreground hover:bg-destructive hover:text-destructive-foreground flex aspect-square h-8 w-8 items-center justify-center rounded-full transition-colors focus:outline-none"
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" className="stroke-current">
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          className="stroke-current"
+        >
           <path
             fill="none"
             strokeWidth="1.4"
