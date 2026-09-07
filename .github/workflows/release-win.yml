@@ -11,36 +11,36 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
+      # ── Node / pnpm ──────────────────────────────────────────────────────
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
           run_install: false
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - uses: actions/cache@v4
-        name: Setup pnpm cache
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: "20"
+          cache: "pnpm"
 
-      - name: Install dependencies
+      - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
 
+      # ── Rust ─────────────────────────────────────────────────────────────
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      # ── Version guard ────────────────────────────────────────────────────
       - name: Verify tag matches package.json version
         shell: pwsh
         run: |
@@ -51,22 +51,26 @@ jobs:
             exit 1
           }
 
-      - name: Build installer
-        run: pnpm run dist
+      # ── Build ────────────────────────────────────────────────────────────
+      - name: Build Tauri app (portable)
+        run: pnpm build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build portable
-        run: pnpm run dist:portable
+      - name: Stage portable binary
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path "release" -Force
+          Copy-Item "src-tauri/target/release/evergarden-font-manager.exe" "release/Evergarden.Font.Manager.exe"
 
-      - name: Create GitHub Release and upload installer
+      # ── Release ──────────────────────────────────────────────────────────
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
           files: |
-            release/installer/*.exe
-            release/installer/*.blockmap
-            release/portable/*.exe
-            release/portable/*.blockmap
+            release/Evergarden.Font.Manager.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
